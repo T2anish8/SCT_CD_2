@@ -1,0 +1,88 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+df = pd.read_csv("C:\\Users\\Tanish Agarwal\\Downloads\\archive\\GS 1.csv")
+df['Date'] = pd.to_datetime(df['Date'])
+df = df.sort_values(by='Date')
+df = df.drop_duplicates()
+df.reset_index(drop=True, inplace=True)
+
+print("Dataset Shape:", df.shape)
+print("\nMissing Values:\n", df.isnull().sum())
+print("\nStatistical Summary:\n", df.describe())
+
+plt.figure(figsize=(12,6))
+plt.plot(df['Date'], df['Close'], label='Closing Price')
+plt.title("Stock Price Trend")
+plt.xlabel("Date")
+plt.ylabel("Close Price")
+plt.legend()
+plt.show()
+
+df['MA50'] = df['Close'].rolling(50).mean()
+df['MA200'] = df['Close'].rolling(200).mean()
+
+plt.figure(figsize=(12,6))
+plt.plot(df['Date'], df['Close'], label='Close')
+plt.plot(df['Date'], df['MA50'], label='50-day MA')
+plt.plot(df['Date'], df['MA200'], label='200-day MA')
+plt.title("Moving Averages")
+plt.legend()
+plt.show()
+
+df['Daily Return'] = df['Close'].pct_change()
+plt.figure(figsize=(10,5))
+df['Daily Return'].hist(bins=50, alpha=0.7)
+plt.title("Daily Returns Distribution")
+plt.xlabel("Daily Return")
+plt.ylabel("Frequency")
+plt.show()
+
+corr = df[['Open','High','Low','Close','Adj Close','Volume']].corr()
+
+plt.figure(figsize=(8,6))
+sns.heatmap(corr, annot=True, cmap="YlGnBu", linewidths=0.5, cbar_kws={"shrink": 0.8})
+plt.title("Correlation Between Variables", fontsize=14, fontweight='bold')
+plt.show()
+
+plt.figure(figsize=(10,6))
+sns.scatterplot(
+    x=df['Volume'], 
+    y=df['Close'], 
+    alpha=0.4, 
+    color="green", 
+    s=40,              
+    edgecolor="none"
+)
+sns.regplot(
+    x=df['Volume'], 
+    y=df['Close'], 
+    scatter=False, 
+    color="red", 
+    line_kws={"linewidth":2, "alpha":0.9}
+)
+
+plt.title("Relationship Between Volume & Closing Price", fontsize=16, fontweight='bold')
+plt.xlabel("Volume (log scale)", fontsize=12)
+plt.ylabel("Closing Price", fontsize=12)
+
+plt.xscale("log")
+
+plt.grid(True, linestyle="--", alpha=0.6)
+plt.tight_layout()
+plt.show()
+
+df['Year'] = df['Date'].dt.year
+df['Month'] = df['Date'].dt.month
+
+df['Month'] = df['Date'].dt.to_period('M')
+monthly_avg = df.groupby('Month')['Close'].mean()
+
+plt.figure(figsize=(12,5))
+monthly_avg.plot(color="green", linewidth=2.5)  
+plt.title("Average Monthly Close Price", fontsize=14, fontweight='bold')
+plt.xlabel("Month")
+plt.ylabel("Average Close Price")
+plt.grid(True, linestyle="--", alpha=0.6)
+plt.show()
